@@ -1,5 +1,8 @@
 import json
+from typing import Union
+
 import sounddevice as sd
+import soundfile as sf
 
 from jsonschema import validate
 from chains import ChainOfMethods
@@ -66,6 +69,17 @@ class StreamWithChainOfMethods(sd.RawStream):
         """
         self.chain_of_methods = ChainOfMethods(*args)
 
+    def get_iterations(self, seconds: int) -> Union[int, float]:
+        """
+        Return the amount of iteration which is mapped to passed amount of second
+        :param seconds:
+        :return:
+        """
+        if seconds:
+            return int((self.samplerate / self.blocksize) * seconds)
+        else:
+            return float('inf')
+
     def read(self, frames):
         """
         Overridden base class method where cffi buffer object
@@ -81,6 +95,38 @@ class StreamWithChainOfMethods(sd.RawStream):
         """
         in_data = self.read(self.blocksize)
         return self.chain_of_methods(in_data)
+
+
+class StreamFromFile(sf.SoundFile):
+    def __init__(self, chain_of_methods: ChainOfMethods = None, blocksize: int = 1024, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.blocksize = blocksize
+        self.chain_of_methods = chain_of_methods
+
+    def set_chain(self, chain_of_methods: ChainOfMethods):
+        """
+        Passing an existing instance of ChainOfMethods class
+        """
+        self.chain_of_methods = chain_of_methods
+
+    def set_methods(self, *args):
+        """
+        Initializing the ChainOfMethods attributes by passing
+        the list of BlockAudioMethod instances
+
+        """
+        self.chain_of_methods = ChainOfMethods(*args)
+
+    def apply(self):
+        """
+        Calling the ChainOfMethods attributes which processes the raw audio data
+        :return:
+        """
+        if self.tell() < self.frames:
+            pos = self.tell()
+            in_data = self.read(self.blocksize)
+            self.seek(pos)
+            return self.chain_of_methods(in_data)
 
 
 if __name__ == "__main__":
