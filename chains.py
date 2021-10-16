@@ -1,12 +1,3 @@
-from abc import ABC, abstractmethod
-
-
-class BlockAudioMethod(ABC):
-    @abstractmethod
-    def __call__(self, in_data):
-        ...
-
-
 class ChainOfMethods:
     def __init__(self, *chain):
         self.chain = chain
