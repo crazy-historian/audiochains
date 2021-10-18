@@ -1,5 +1,6 @@
 import json
-from typing import Union
+import wave
+from typing import Union, Optional
 
 import sounddevice as sd
 import soundfile as sf
@@ -97,36 +98,38 @@ class StreamWithChainOfMethods(sd.RawStream):
         return self.chain_of_methods(in_data)
 
 
-class StreamFromFile(sf.SoundFile):
-    def __init__(self, chain_of_methods: ChainOfMethods = None, blocksize: int = 1024, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class StreamFromFile:
+    """
+    Realization of playback WAV file by block(chunk) of frames for the sake of testing
+    """
+    def __init__(self,
+                 filename: str,
+                 blocksize: int = 1024,
+                 chain_of_methods: Optional[ChainOfMethods] = None):
+        self.chain_of_methods = chain_of_methods
         self.blocksize = blocksize
-        self.chain_of_methods = chain_of_methods
+        self.filename = filename
+        self.iterations = None
+        self.wavfile = None
 
-    def set_chain(self, chain_of_methods: ChainOfMethods):
-        """
-        Passing an existing instance of ChainOfMethods class
-        """
-        self.chain_of_methods = chain_of_methods
+    def open(self) -> None:
+        self.wavfile = wave.open(self.filename, 'rb')
 
-    def set_methods(self, *args):
-        """
-        Initializing the ChainOfMethods attributes by passing
-        the list of BlockAudioMethod instances
+    def close(self) -> None:
+        self.wavfile.close()
 
-        """
-        self.chain_of_methods = ChainOfMethods(*args)
+    def read(self, frames):
+        return self.wavfile.readframes(frames)
 
     def apply(self):
-        """
-        Calling the ChainOfMethods attributes which processes the raw audio data
-        :return:
-        """
-        if self.tell() < self.frames:
-            pos = self.tell()
-            in_data = self.read(self.blocksize)
-            self.seek(pos)
-            return self.chain_of_methods(in_data)
+        return self.chain_of_methods(in_data=self.read(self.blocksize))
+
+    def get_iterations(self) -> int:
+        frames = self.wavfile.getnframes()
+        iterations = frames // self.blocksize
+        if frames % self.blocksize != 0:
+            iterations += 1
+        return iterations
 
 
 if __name__ == "__main__":
