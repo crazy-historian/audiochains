@@ -1,3 +1,8 @@
+"""
+    The definition of BlockAudioMethod possible output data types.
+"""
+
+
 import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
