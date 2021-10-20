@@ -62,7 +62,7 @@ def get_hostapi_with_devices(kind: str = None) -> dict[str: dict]:
 
 def get_hostapi_by_device_name(device_name: str) -> Optional[str]:
     """
-    if the device with the passed name exists,
+    If the device with the passed name exists,
     function returns the hostapi name related with particular device name,
     otherwise None
 
