@@ -1,10 +1,22 @@
 import wave
+from abc import ABC, abstractmethod
 
 
-from callbacks.main import CallbackWriter
+class WriterInFile(ABC):
+    @abstractmethod
+    def open(self):
+        ...
+
+    @abstractmethod
+    def close(self):
+        ...
+
+    @abstractmethod
+    def write(self, in_data) -> None:
+        ...
 
 
-class WriterInWAV(CallbackWriter):
+class WriterInWAV(WriterInFile):
     """
     This class implement writing bytes-type data in WAV file
     """
@@ -19,6 +31,7 @@ class WriterInWAV(CallbackWriter):
         self.sampwidth = sampwidth
         self.file_name = file_name
         self.channels = channels
+        self.wav_file = None
         self.open()
 
     def open(self) -> None:
@@ -26,6 +39,9 @@ class WriterInWAV(CallbackWriter):
         self.wav_file.setnchannels(self.channels)
         self.wav_file.setsampwidth(self.sampwidth)
         self.wav_file.setframerate(self.framerate)
+
+    def close(self):
+        self.wav_file.close()
 
     def __enter__(self):
         return self
@@ -35,5 +51,5 @@ class WriterInWAV(CallbackWriter):
             self.wav_file.close()
         return True
 
-    def __call__(self, in_data) -> None:
+    def write(self, in_data) -> None:
         self.wav_file.writeframesraw(in_data)
