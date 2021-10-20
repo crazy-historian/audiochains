@@ -15,6 +15,10 @@ stream_parameters_schema = {
             "type": ["integer", "null"],
             "enum": [1, 2]
         },
+        "sampwidth": {
+            "type": ["integer", "null"],
+            "enum": [1, 2, 3, 4]
+        },
         'device_id': {
             "type": ["integer", "null"]
         },

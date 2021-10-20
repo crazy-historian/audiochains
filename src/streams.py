@@ -3,20 +3,26 @@ import wave
 from typing import Union, Optional
 
 import sounddevice as sd
-import soundfile as sf
-
 from jsonschema import validate
 from chains import ChainOfMethods
 from schemas import stream_parameters_schema
 
+input_output_sampwidth = {
+    1: ('int8', 'int8'),
+    2: ('int16', 'int16'),
+    3: ('int24', 'int24'),
+    4: ('float32', 'float32')
+}
 
-class StreamWithChainOfMethods(sd.RawStream):
+
+class StreamWithChain(sd.RawStream):
     """
     An overridden sd.RawStream class containing the ChainOfMethods instance and
     related methods.
     """
 
-    def __init__(self, json_file: str = None, chain_of_methods: ChainOfMethods = None, *args, **kwargs):
+    def __init__(self, json_file: str = None, chain_of_methods: ChainOfMethods = None, *args,
+                 **kwargs):
         """
          This class can be initialized by passing the json file name with necessary parameters.
 
@@ -25,9 +31,9 @@ class StreamWithChainOfMethods(sd.RawStream):
             with open("test_config.json", "w") as write_file:
                 json.dump(test_config, write_file)
 
-            with StreamWithChainOfMethods(json_file='test_config.json') as stream:
+            with StreamWithChain(json_file='test_config.json') as stream:
                 while True:
-                stream.write(stream.read(stream.blocksize)[0])
+                    stream.write(stream.read(stream.blocksize)[0])
 
         Parameters
         ----------
@@ -37,7 +43,7 @@ class StreamWithChainOfMethods(sd.RawStream):
         """
 
         if json_file:
-            super().__init__(**self.from_json(json_file))
+            super().__init__(*args, **self.from_json(json_file), **kwargs)
         else:
             super().__init__(*args, **kwargs)
         self.chain_of_methods = chain_of_methods
@@ -53,6 +59,8 @@ class StreamWithChainOfMethods(sd.RawStream):
             stream_config['samplerate'] = stream_config.pop('framerate')
             stream_config['blocksize'] = stream_config.pop('chunk_size')
             stream_config['device'] = stream_config.pop('device_id')
+            stream_config['dtype'] = input_output_sampwidth[stream_config['sampwidth']]
+            stream_config.pop('sampwidth')
 
             return stream_config
 
@@ -85,9 +93,8 @@ class StreamWithChainOfMethods(sd.RawStream):
         """
         Overridden base class method where cffi buffer object
         is unpacked to bytes
-
         """
-        return memoryview(self.read(frames)[0]).tobytes()
+        return memoryview(sd.RawStream.read(self, frames=frames)[0]).tobytes()
 
     def apply(self):
         """
@@ -102,6 +109,7 @@ class StreamFromFile:
     """
     Realization of playback WAV file by block(chunk) of frames for the sake of testing
     """
+
     def __init__(self,
                  filename: str,
                  blocksize: int = 1024,
@@ -110,22 +118,30 @@ class StreamFromFile:
         self.blocksize = blocksize
         self.filename = filename
         self.iterations = None
-        self.wavfile = None
+        self.wav_file = None
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return True
 
     def open(self) -> None:
-        self.wavfile = wave.open(self.filename, 'rb')
+        self.wav_file = wave.open(self.filename, 'rb')
 
     def close(self) -> None:
-        self.wavfile.close()
+        self.wav_file.close()
 
     def read(self, frames):
-        return self.wavfile.readframes(frames)
+        return self.wav_file.readframes(frames)
 
     def apply(self):
         return self.chain_of_methods(in_data=self.read(self.blocksize))
 
     def get_iterations(self) -> int:
-        frames = self.wavfile.getnframes()
+        frames = self.wav_file.getnframes()
         iterations = frames // self.blocksize
         if frames % self.blocksize != 0:
             iterations += 1
@@ -133,15 +149,6 @@ class StreamFromFile:
 
 
 if __name__ == "__main__":
-    test_config = {
-        'framerate': 44800,
-        'chunk_size': 1024,
-        'channels': 1,
-        'device_id': None
-    }
-    with open("test_config.json", "w") as write_file:
-        json.dump(test_config, write_file)
-
-    with StreamWithChainOfMethods(json_file='test_config.json') as stream:
-        while True:
-            stream.write(stream.read(1024)[0])
+    with StreamWithChain(json_file=r'E:\runtime_audio_processing\test\test_config.json', sampwidth=2) as stream:
+        for _ in range(stream.get_iterations(seconds=1)):
+            stream.read(stream.blocksize)
