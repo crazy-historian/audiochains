@@ -21,7 +21,7 @@ class StreamWithChain(sd.RawStream):
     related methods.
     """
 
-    def __init__(self, json_file: str = None, chain_of_methods: ChainOfMethods = None, *args,
+    def __init__(self, json_file: str = None, sampwidth=2, chain_of_methods: ChainOfMethods = None, *args,
                  **kwargs):
         """
          This class can be initialized by passing the json file name with necessary parameters.
@@ -45,7 +45,7 @@ class StreamWithChain(sd.RawStream):
         if json_file:
             super().__init__(*args, **self.from_json(json_file), **kwargs)
         else:
-            super().__init__(*args, **kwargs)
+            super().__init__(*args, dtype=input_output_sampwidth[sampwidth], **kwargs)
         self.chain_of_methods = chain_of_methods
 
     @staticmethod
