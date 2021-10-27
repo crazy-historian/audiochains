@@ -1,5 +1,6 @@
 import numpy as np
 from audioop import rms
+from math import log10
 from scipy.signal import butter, filtfilt
 from abc import ABC, abstractmethod
 from librosa.feature import mfcc
@@ -43,6 +44,14 @@ class RMSFromArray(BlockAudioMethod):
     def __call__(self, in_data: Union[np_int16_array, np_float32_array]) -> int:
         in_data = in_data.astype(np.float32)
         return round(np.sqrt((in_data * in_data).sum() / len(in_data)))
+
+
+class RMSlog(BlockAudioMethod):
+    def __call__(self, in_data: int):
+        if in_data > 0:
+            return round(20 * log10(in_data), 2)
+        else:
+            return 0
 
 
 class HammingWindow(BlockAudioMethod):
@@ -109,6 +118,3 @@ class SoundPressureThreshold(BlockAudioMethod):
             return VoiceRange.NORMAL
         elif self.loud_diapason[0] <= in_data:
             return VoiceRange.LOUD
-
-
-
