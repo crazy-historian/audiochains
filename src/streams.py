@@ -105,7 +105,15 @@ class StreamWithChain(sd.RawStream):
         return self.chain_of_methods(in_data)
 
 
-class StreamFromFile:
+class InputStreamWithChain(StreamWithChain):
+    def
+
+
+class OutputStreamWithChain(StreamWithChain):
+    ...
+
+
+class StreamWithChainFromFile:
     """
     Realization of playback WAV file by block(chunk) of frames for the sake of testing
     """

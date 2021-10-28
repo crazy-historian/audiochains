@@ -2,8 +2,12 @@ import pytest
 
 import json
 from writers import WriterInWAV
-from streams import StreamWithChain, StreamFromFile
+from streams import StreamWithChain, StreamWithChainFromFile
 
+
+
+def test_schema_validation():
+    ...
 
 @pytest.mark.parametrize("test_input, expected", [
     ({"samplerate": 8000, "blocksize": 512, "channels": 1}, (8000.0, 512, (1, 1))),
@@ -36,7 +40,7 @@ def test_stream_init_from_json():
 
 
 def test_stream_from_file_init():
-    with StreamFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
+    with StreamWithChainFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
         for _ in range(file_stream.get_iterations()):
             file_stream.read(file_stream.blocksize)
 

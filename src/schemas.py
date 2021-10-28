@@ -20,7 +20,21 @@ stream_parameters_schema = {
             "enum": [1, 2, 3, 4]
         },
         'device_id': {
-            "type": ["integer", "null"]
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                {
+                    "type": "null"
+                }
+            ]
         },
         "dtype": {
             "type": ["string", "null"]
