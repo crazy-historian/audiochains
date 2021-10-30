@@ -3,6 +3,8 @@ import wave
 import json
 from writers import WriterInWAV
 from streams import IOStreamWithChain, InputStreamWithChain, StreamWithChainFromFile
+from chains import ChainOfMethods
+from block_methods import RMSFromArray, UnpackRawInFloat32
 
 
 @pytest.mark.parametrize("test_input, expected", [
@@ -142,3 +144,45 @@ def test_input_stream_file_recording():
             ) as writer:
         for _ in range(stream.get_iterations(seconds=1)):
             writer.write(stream.read(stream.blocksize))
+
+
+def test_io_stream_set_methods():
+    with IOStreamWithChain(json_file='test_config.json') as stream:
+        stream.set_methods(
+            UnpackRawInFloat32(),
+            RMSFromArray()
+        )
+        for _ in range(stream.get_iterations(seconds=1)):
+            stream.apply()
+
+
+def test_io_stream_set_chain():
+    with IOStreamWithChain(json_file='test_config.json') as stream:
+        chain = ChainOfMethods(
+            UnpackRawInFloat32(),
+            RMSFromArray()
+        )
+        stream.set_chain(chain)
+        for _ in range(stream.get_iterations(seconds=1)):
+            stream.apply()
+
+
+def test_input_stream_set_methods():
+    with InputStreamWithChain(json_file='test_config.json') as stream:
+        stream.set_methods(
+            UnpackRawInFloat32(),
+            RMSFromArray()
+        )
+        for _ in range(stream.get_iterations(seconds=1)):
+            stream.apply()
+
+
+def test_input_stream_set_chain():
+    with InputStreamWithChain(json_file='test_config.json') as stream:
+        chain = ChainOfMethods(
+            UnpackRawInFloat32(),
+            RMSFromArray()
+        )
+        stream.set_chain(chain)
+        for _ in range(stream.get_iterations(seconds=1)):
+            stream.apply()
