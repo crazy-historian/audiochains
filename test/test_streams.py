@@ -2,12 +2,8 @@ import pytest
 
 import json
 from writers import WriterInWAV
-from streams import StreamWithChain, StreamWithChainFromFile
+from streams import IOStreamWithChain, StreamWithChainFromFile
 
-
-
-def test_schema_validation():
-    ...
 
 @pytest.mark.parametrize("test_input, expected", [
     ({"samplerate": 8000, "blocksize": 512, "channels": 1}, (8000.0, 512, (1, 1))),
@@ -18,14 +14,14 @@ def test_schema_validation():
     ({"samplerate": 48000, "blocksize": 1024, "channels": 2}, (48000.0, 1024, (2, 2))),
 ])
 def test_stream_init(test_input, expected):
-    stream = StreamWithChain(**test_input)
+    stream = IOStreamWithChain(**test_input)
     assert (stream.samplerate, stream.blocksize, stream.channels) == expected
 
 
 def test_stream_init_from_json():
     with open('test_config.json', 'r') as file:
         test_config = json.load(file)
-        stream = StreamWithChain(json_file='test_config.json')
+        stream = IOStreamWithChain(json_file='test_config.json')
         assert (
                    stream.samplerate,
                    stream.blocksize,
@@ -46,7 +42,7 @@ def test_stream_from_file_init():
 
 
 def test_stream_recording():
-    with StreamWithChain(json_file='test_config.json') as stream:
+    with IOStreamWithChain(json_file='test_config.json') as stream:
         for _ in range(stream.get_iterations(seconds=1)):
             stream.read(stream.blocksize)
 
@@ -58,12 +54,12 @@ def test_stream_recording():
     ({"sampwidth": 4, "blocksize": 1024}, (4096, ("float32", "float32")))
 ])
 def test_stream_sampwidth(test_stream_parameters, expected):
-    with StreamWithChain(**test_stream_parameters) as stream:
+    with IOStreamWithChain(**test_stream_parameters) as stream:
         assert len(stream.read(stream.blocksize)), stream.dtype == expected
 
 
 def test_file_recording():
-    with StreamWithChain(json_file='test_config.json') as stream, \
+    with IOStreamWithChain(json_file='test_config.json') as stream, \
             WriterInWAV(
                 file_name='test_recording.wav',
                 framerate=stream.samplerate,
