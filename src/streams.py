@@ -1,5 +1,7 @@
 import json
 import wave
+import pathlib
+from pathlib import Path
 from typing import Union, Optional
 from abc import ABC, abstractmethod
 
@@ -7,6 +9,8 @@ import sounddevice as sd
 from jsonschema import validate
 from chains import ChainOfMethods
 from schemas import stream_parameters_schema
+
+project_path = pathlib.Path(__file__).parent.parent
 
 two_sided_sampwidth = {
     1: ('int8', 'int8'),
@@ -25,10 +29,29 @@ one_sided_sampwidth = {
 
 class StreamWithChain(ABC):
     """
-       An interface with define a wrapping for sound device stream objects
+       An interface which defines a wrapping for sounddevice stream objects.
+       This class should store the ChainOfMethods instance and define applying
+       this chain to raw input data.
     """
+
     def __init__(self, chain_of_methods: Optional[ChainOfMethods]):
         self.chain_of_methods = chain_of_methods
+
+    @staticmethod
+    def from_json(json_file: str, schema: dict):
+        """
+        Loads json_file and changes the legacy code style keys to SoundDevice style
+        """
+        with open(json_file, 'r') as json_file:
+            stream_config = json.load(json_file)
+            validate(instance=stream_config, schema=schema)
+            stream_config['samplerate'] = stream_config.pop('framerate')
+            stream_config['blocksize'] = stream_config.pop('chunk_size')
+            stream_config['device'] = stream_config.pop('device_id')
+            stream_config['dtype'] = two_sided_sampwidth[stream_config['sampwidth']]
+            stream_config.pop('sampwidth')
+
+            return stream_config
 
     def set_chain(self, chain_of_methods: ChainOfMethods):
         """
@@ -55,8 +78,7 @@ class StreamWithChain(ABC):
 
 class IOStreamWithChain(StreamWithChain, sd.RawStream):
     """
-    An overridden sd.RawStream class containing the ChainOfMethods instance and
-    related methods.
+    An overridden sd.RawStream class as a StreamWithChain interface implementation
     """
 
     def __init__(self, json_file: str = None, sampwidth=2, chain_of_methods: ChainOfMethods = None, *args,
@@ -81,26 +103,10 @@ class IOStreamWithChain(StreamWithChain, sd.RawStream):
         """
 
         if json_file:
-            sd.RawStream.__init__(self, *args, **self.from_json(json_file), **kwargs)
+            sd.RawStream.__init__(self, *args, **self.from_json(json_file, stream_parameters_schema), **kwargs)
         else:
             sd.RawStream.__init__(self, *args, dtype=two_sided_sampwidth[sampwidth], **kwargs)
         StreamWithChain.__init__(self, chain_of_methods)
-
-    @staticmethod
-    def from_json(json_file: str):
-        """
-        Loads json_file and changes the legacy code style keys to SoundDevice style
-        """
-        with open(json_file, 'r') as json_file:
-            stream_config = json.load(json_file)
-            validate(instance=stream_config, schema=stream_parameters_schema)
-            stream_config['samplerate'] = stream_config.pop('framerate')
-            stream_config['blocksize'] = stream_config.pop('chunk_size')
-            stream_config['device'] = stream_config.pop('device_id')
-            stream_config['dtype'] = two_sided_sampwidth[stream_config['sampwidth']]
-            stream_config.pop('sampwidth')
-
-            return stream_config
 
     def get_iterations(self, seconds: int) -> Union[int, float]:
         """
@@ -140,7 +146,7 @@ class InputStreamWithChain(StreamWithChain, sd.RawInputStream):
             with open("test_config.json", "w") as write_file:
                 json.dump(test_config, write_file)
 
-            with IOStreamWithChain(json_file='test_config.json') as stream:
+            with InputStreamWithChain(json_file='test_config.json') as stream:
                 while True:
                     stream.write(stream.read(stream.blocksize)[0])
 
@@ -152,26 +158,10 @@ class InputStreamWithChain(StreamWithChain, sd.RawInputStream):
         """
 
         if json_file:
-            sd.RawInputStream.__init__(self, *args, **self.from_json(json_file), **kwargs)
+            sd.RawInputStream.__init__(self, *args, **self.from_json(json_file, stream_parameters_schema), **kwargs)
         else:
             sd.RawInputStream.__init__(self, *args, dtype=one_sided_sampwidth[sampwidth], **kwargs)
         StreamWithChain.__init__(self, chain_of_methods)
-
-    @staticmethod
-    def from_json(json_file: str):
-        """
-        Loads json_file and changes the legacy code style keys to SoundDevice style
-        """
-        with open(json_file, 'r') as json_file:
-            stream_config = json.load(json_file)
-            validate(instance=stream_config, schema=stream_parameters_schema)
-            stream_config['samplerate'] = stream_config.pop('framerate')
-            stream_config['blocksize'] = stream_config.pop('chunk_size')
-            stream_config['device'] = stream_config.pop('device_id')
-            stream_config['dtype'] = two_sided_sampwidth[stream_config['sampwidth']]
-            stream_config.pop('sampwidth')
-
-            return stream_config
 
     def get_iterations(self, seconds: int) -> Union[int, float]:
         """
@@ -202,7 +192,8 @@ class InputStreamWithChain(StreamWithChain, sd.RawInputStream):
 
 class StreamWithChainFromFile(StreamWithChain):
     """
-    Realization of playback WAV file by block(chunk) of frames for the sake of testing
+    A realization of StreamWithChain interface
+    which playbacks WAV file by block(chunk) of frames for the sake of testing
     """
 
     def __init__(self,
@@ -225,6 +216,8 @@ class StreamWithChainFromFile(StreamWithChain):
 
     def open(self) -> None:
         self.wav_file = wave.open(self.filename, 'rb')
+        parameters = self.wav_file.getparams()
+        self.samplerate, self.channels = parameters.framerate, parameters.nchannels
 
     def close(self) -> None:
         self.wav_file.close()
@@ -244,6 +237,6 @@ class StreamWithChainFromFile(StreamWithChain):
 
 
 if __name__ == "__main__":
-    with IOStreamWithChain(json_file=r'E:\runtime_audio_processing\test\test_config.json', sampwidth=2) as stream:
+    with IOStreamWithChain(json_file=str(Path(f'{project_path}/test/test_config.json')), sampwidth=2) as stream:
         for _ in range(stream.get_iterations(seconds=5)):
             stream.read(stream.blocksize)
