@@ -3,11 +3,11 @@ from block_methods import (
     RMSFromBytes,
     RMSFromArray
 )
-from streams import StreamFromFile
+from streams import StreamWithChainFromFile
 
 
 def test_rms_from_bytes():
-    with StreamFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
+    with StreamWithChainFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
         file_stream.set_methods(
             RMSFromBytes()
         )
@@ -16,7 +16,7 @@ def test_rms_from_bytes():
 
 
 def test_rms_from_array():
-    with StreamFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
+    with StreamWithChainFromFile(filename='test_playback.wav', blocksize=1024) as file_stream:
         file_stream.set_methods(
             UnpackRawInInt16(),
             RMSFromArray()
