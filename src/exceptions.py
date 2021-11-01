@@ -11,7 +11,7 @@ class AppExceptionCase(Exception):
 
 
 class AppException:
-    class PyAudioException(AppExceptionCase):
+    class ChainOfMethodsException(AppExceptionCase):
         def __init__(self, description: str = None):
             """
             PyAudio stream initializing was failed.

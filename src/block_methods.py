@@ -1,31 +1,57 @@
 import numpy as np
-from globals import VoiceRange
-from callbacks.main import (
-    CallbackFilter,
+from audioop import rms
+from math import log10
+from scipy.signal import butter, filtfilt
+from abc import ABC, abstractmethod
+from librosa.feature import mfcc
+from typing import Union, List
+
+from output_types import (
     FourierTuple,
+    VoiceRange,
     np_int16_array,
     np_float32_array
 )
-from audioop import rms
-from scipy.signal import butter, filtfilt
-from librosa.feature import mfcc
-
-from typing import Union, List
 
 
-class UnpackRawInInt16Callback(CallbackFilter):
+class BlockAudioMethod(ABC):
+    """
+    An abstract interface defining the functionality of audio processing unit.
+    """
+    @abstractmethod
+    def __call__(self, in_data):
+        """
+        The developer have to override __call__ method
+        which performs audio processing on data block (chunk)
+        ----
+        Parameters:
+            in_data: input audio data block
+        """
+        ...
+
+
+class UnpackRawInInt16(BlockAudioMethod):
+    """
+    Unpacking raw audio data (sequences of bytes) in numpy int16 array.
+    """
     def __call__(self, in_data: bytes) -> np_int16_array:
         return np.frombuffer(in_data, np.int16)
 
 
-class UnpackRawInFloat32Callback(CallbackFilter):
+class UnpackRawInFloat32(BlockAudioMethod):
+    """
+    Unpacking raw audio data (sequences of bytes) in the numpy float32 array.
+    """
     def __call__(self, in_data: bytes) -> np_float32_array:
         max_int16_value = 2 ** 15
         data = np.frombuffer(in_data, np.int16)
         return data.astype(np.float32) / max_int16_value
 
 
-class RMSFromBytesCallback(CallbackFilter):
+class RMSFromBytes(BlockAudioMethod):
+    """
+    Calculating root mean square (RMS) value of the input raw audio block with a certain sample width.
+    """
     def __init__(self, width: int = 2):
         self.width = width
 
@@ -33,18 +59,38 @@ class RMSFromBytesCallback(CallbackFilter):
         return rms(in_data, self.width)
 
 
-class RMSFromArrayCallback(CallbackFilter):
-    def __call__(self, in_data: Union[np_int16_array, np_float32_array]) -> np.float32:
+class RMSFromArray(BlockAudioMethod):
+    """
+    Calculating root mean square (RMS) value of the input numpy array.
+    """
+    def __call__(self, in_data: Union[np_int16_array, np_float32_array]) -> int:
         in_data = in_data.astype(np.float32)
         return round(np.sqrt((in_data * in_data).sum() / len(in_data)))
 
 
-class HammingFilter(CallbackFilter):
+class DBLog10(BlockAudioMethod):
+    """
+    Calculating logarithmic relative value of input int vale
+    """
+    def __call__(self, in_data: int):
+        if in_data > 0:
+            return round(20 * log10(in_data), 2)
+        else:
+            return 0
+
+
+class HammingWindow(BlockAudioMethod):
+    """
+    Superimposing the hamming window on the input numpy array.
+    """
     def __call__(self, data: Union[np_int16_array, np_float32_array]) -> np_float32_array:
         return data * np.hamming(len(data))
 
 
-class FourierCallback(CallbackFilter):
+class FourierTransform(BlockAudioMethod):
+    """
+    Calculating the fourier transform on the input numpy float32 array with a certain framerate.
+    """
     def __init__(self, framerate: int):
         self.framerate = framerate
 
@@ -56,7 +102,10 @@ class FourierCallback(CallbackFilter):
         return FourierTuple(amplitude=hs, frequency=fs)
 
 
-class MFCCCallback(CallbackFilter):
+class MFCC(BlockAudioMethod):
+    """
+    Calculating certain number of mfcc coefficients of the input numpy float32 array
+    """
     def __init__(self, n_mfcc: int, freq_rate: int):
         super().__init__()
         self.n_mfcc = n_mfcc
@@ -66,7 +115,10 @@ class MFCCCallback(CallbackFilter):
         return mfcc(data, n_mfcc=self.n_mfcc, sr=self.freq_rate)
 
 
-class BandPassCallback(CallbackFilter):
+class BandPassFilter(BlockAudioMethod):
+    """
+    Application of the butterworth bandpass filter
+    """
     def __init__(self,
                  sample_rate: int,
                  low_cut: int = 200,
@@ -83,7 +135,10 @@ class BandPassCallback(CallbackFilter):
         return filtfilt(self.b, self.a, data).astype(self.out_type)
 
 
-class VolumeCallback(CallbackFilter):
+class SoundPressureThreshold(BlockAudioMethod):
+    """
+    Calculation of the threshold function to the RMS value of the input audio amplitude
+    """
     def __init__(self,
                  silence_diapason: List[int],
                  whisper_diapason: List[int],
