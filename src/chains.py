@@ -1,4 +1,7 @@
 class ChainOfMethods:
+    """
+    Implementation of Chain Of Command pattern for sequences of BlockAudioMethod.
+    """
     def __init__(self, *chain):
         self.chain = chain
 
