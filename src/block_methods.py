@@ -13,6 +13,15 @@ from output_types import (
     np_float32_array
 )
 
+import torch
+import os
+from vad.utils_vad import *
+import amfm_decompy.basic_tools as basic
+import amfm_decompy.pYAAPT as pYAAPT
+
+import pathlib
+from pathlib import Path
+
 
 class BlockAudioMethod(ABC):
     """
@@ -158,3 +167,37 @@ class SoundPressureThreshold(BlockAudioMethod):
             return VoiceRange.NORMAL
         elif self.loud_diapason[0] <= in_data:
             return VoiceRange.LOUD
+
+
+class VADetectionCallback(BlockAudioMethod):
+    """
+    Method is separeting the wav file into segments with or without speech
+    """
+    def __init__(self, file):
+        torch.set_num_threads(1)
+        project_path = pathlib.Path(__file__).parent.parent
+        self.model, self.utils = torch.hub.load(source='local',
+                                                repo_or_dir=str(Path(f'{project_path}/src/vad')),
+                                                model='silero_vad',
+                                                force_reload=True)
+        self.wav = read_audio(str(Path(f'{project_path}/' + file)))
+
+    # ext bool var adapt_method for method choice: adapt or classic
+    def __call__(self, adapt_method):
+        if not adapt_method:
+            return get_speech_ts(self.wav, self.model, num_steps=4)
+        elif adapt_method:
+            return get_speech_ts_adaptive(self.wav, self.model)
+
+
+class PitchYAAPTCallback(BlockAudioMethod):
+    """
+    Method is to calculate pitch characteristic based on wav file
+    """
+    def __call__(self, file):
+        self.signal = basic.SignalObj(os.path.dirname(os.path.dirname(__file__)) + file)
+        return pYAAPT.yaapt(self.signal,
+                            frame_length=40,
+                            tda_frame_length=40,
+                            f0_min=75,
+                            f0_max=600)
