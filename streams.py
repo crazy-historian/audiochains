@@ -7,10 +7,12 @@ from abc import ABC, abstractmethod
 
 import sounddevice as sd
 from jsonschema import validate
+
+from block_methods import RMSFromBytes
 from chains import ChainOfMethods
 from schemas import stream_parameters_schema
 
-project_path = pathlib.Path(__file__).parent.parent
+project_path = pathlib.Path(__file__).parent
 
 two_sided_sampwidth = {
     1: ('int8', 'int8'),
@@ -103,7 +105,8 @@ class IOStreamWithChain(StreamWithChain, sd.RawStream):
         """
 
         if json_file:
-            sd.RawStream.__init__(self, *args, **self.from_json(json_file, stream_parameters_schema), **kwargs)
+            sd.RawStream.__init__(self, *args, **self.from_json(json_file=json_file, schema=stream_parameters_schema),
+                                  **kwargs)
         else:
             sd.RawStream.__init__(self, *args, dtype=two_sided_sampwidth[sampwidth], **kwargs)
         StreamWithChain.__init__(self, chain_of_methods)
@@ -238,5 +241,8 @@ class StreamWithChainFromFile(StreamWithChain):
 
 if __name__ == "__main__":
     with IOStreamWithChain(json_file=str(Path(f'{project_path}/test/test_config.json')), sampwidth=2) as stream:
-        for _ in range(stream.get_iterations(seconds=5)):
-            stream.read(stream.blocksize)
+        stream.set_methods(
+            RMSFromBytes()
+        )
+        for _ in range(stream.get_iterations(seconds=10)):
+            print(stream.apply())
