@@ -78,7 +78,7 @@ class StreamWithChain(ABC):
         ...
 
 
-class IOStreamWithChain(StreamWithChain, sd.RawStream):
+class IOStream(StreamWithChain, sd.RawStream):
     """
     An overridden sd.RawStream class as a StreamWithChain interface implementation
     """
@@ -138,7 +138,7 @@ class IOStreamWithChain(StreamWithChain, sd.RawStream):
         return self.chain_of_methods(in_data)
 
 
-class InputStreamWithChain(StreamWithChain, sd.RawInputStream):
+class InputStream(StreamWithChain, sd.RawInputStream):
     def __init__(self, json_file: str = None, sampwidth=2, chain_of_methods: ChainOfMethods = None, *args,
                  **kwargs):
         """
@@ -193,7 +193,7 @@ class InputStreamWithChain(StreamWithChain, sd.RawInputStream):
         return self.chain_of_methods(in_data)
 
 
-class StreamWithChainFromFile(StreamWithChain):
+class StreamFromFile(StreamWithChain):
     """
     A realization of StreamWithChain interface
     which playbacks WAV file by block(chunk) of frames for the sake of testing
@@ -240,7 +240,7 @@ class StreamWithChainFromFile(StreamWithChain):
 
 
 if __name__ == "__main__":
-    with IOStreamWithChain(json_file=str(Path(f'{project_path}/test/test_config.json')), sampwidth=2) as stream:
+    with IOStream(json_file=str(Path(f'{project_path}/test/test_config.json')), sampwidth=2) as stream:
         stream.set_methods(
             RMSFromBytes()
         )

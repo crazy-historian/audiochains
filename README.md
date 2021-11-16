@@ -8,12 +8,13 @@ pip install audiochains
 
 ## Example of using
 
-For instance, it is needed to get an RMS of input audio signal amplitude value. 
+For instance, it is needed to get an RMS of input audio signal amplitude value.
+
 ```python
-from audiochains.streams import InputStreamWithChain
+from audiochains.streams import InputStream
 from audiochains.block_methods import RMSFromBytes
 
-with InputStreamWithChain(
+with InputStream(
         samplerate=16000,
         blocksize=1024,
         channels=1,
