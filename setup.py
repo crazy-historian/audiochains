@@ -3,14 +3,14 @@ from setuptools import setup
 
 project_path = Path(__file__).parent
 
-README = str(Path(f'{project_path}/test/test_config.json'))
+README = str(Path(f'{project_path}/audiochains/test/test_config.json'))
 with open(README, encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name='audiochains',
     description='runtime audio processing in chains of algorithms',
-    version='0.9.0',
+    version='0.1.0',
     license='',
     long_description=long_description,
     long_desctiption_content_type='text/markdown',
@@ -18,8 +18,8 @@ setup(
     author='Maxim Zaitsev',
     author_email='zaitsev808@mail.ru',
 
-    packages=['test'],
-    package_data={'/test': ['test_recording.wav', 'test_playback.wav', 'test_config.json']},
+    packages=['audiochains', 'audiochains/test',],
+    package_data={'audiochains/test': ['test_recording.wav', 'test_playback.wav', 'test_config.json']},
     include_package_data=True,
     install_requires=[
         "numpy==1.20.0",
