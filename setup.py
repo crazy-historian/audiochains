@@ -10,7 +10,7 @@ with open(README, encoding='utf-8') as f:
 setup(
     name='audiochains',
     description='runtime audio processing in chains of algorithms',
-    version='0.1.0',
+    version='0.1.1',
     license='',
     long_description=long_description,
     long_desctiption_content_type='text/markdown',

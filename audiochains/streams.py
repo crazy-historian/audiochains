@@ -1,18 +1,13 @@
 import json
 import wave
-import pathlib
-from pathlib import Path
 from typing import Union, Optional
 from abc import ABC, abstractmethod
 
 import sounddevice as sd
 from jsonschema import validate
 
-from block_methods import RMSFromBytes
-from chains import ChainOfMethods
-from schemas import stream_parameters_schema
-
-project_path = pathlib.Path(__file__).parent
+from audiochains.chains import ChainOfMethods
+from audiochains.schemas import stream_parameters_schema
 
 two_sided_sampwidth = {
     1: ('int8', 'int8'),
@@ -237,12 +232,3 @@ class StreamFromFile(StreamWithChain):
         if frames % self.blocksize != 0:
             iterations += 1
         return iterations
-
-
-if __name__ == "__main__":
-    with IOStream(json_file=str(Path(f'{project_path}/test/test_config.json')), sampwidth=2) as stream:
-        stream.set_methods(
-            RMSFromBytes()
-        )
-        for _ in range(stream.get_iterations(seconds=10)):
-            print(stream.apply())
