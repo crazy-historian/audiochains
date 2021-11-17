@@ -152,21 +152,19 @@ class SoundPressureThreshold(BlockAudioMethod):
     """
 
     def __init__(self,
-                 silence_diapason: List[int],
-                 whisper_diapason: List[int],
-                 normal_diapason: List[int],
-                 loud_diapason: List[int]):
-        self.silence_diapason = silence_diapason
-        self.whisper_diapason = whisper_diapason
-        self.normal_diapason = normal_diapason
-        self.loud_diapason = loud_diapason
+                 silence_value: float,
+                 whisper_value: float,
+                 normal_value: float):
+        self.silence_value = silence_value
+        self.whisper_value = whisper_value
+        self.normal_value = normal_value
 
-    def __call__(self, in_data: Union[int, np.float32]) -> VoiceRange:
-        if in_data <= self.silence_diapason[1]:
+    def __call__(self, in_data: Union[int, float, np.float32]) -> VoiceRange:
+        if in_data <= self.silence_value:
             return VoiceRange.SILENCE
-        elif self.whisper_diapason[0] <= in_data <= self.whisper_diapason[1]:
+        elif in_data <= self.whisper_value:
             return VoiceRange.WHISPER
-        elif self.normal_diapason[0] <= in_data <= self.normal_diapason[1]:
+        elif in_data <= self.normal_value:
             return VoiceRange.NORMAL
-        elif self.loud_diapason[0] <= in_data:
+        elif in_data > self.normal_value:
             return VoiceRange.LOUD

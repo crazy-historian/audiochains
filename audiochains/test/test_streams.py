@@ -1,10 +1,10 @@
 import pytest
 import wave
 import json
-from writers import WriterInWAV
-from streams import IOStream, InputStream, StreamFromFile
-from chains import ChainOfMethods
-from block_methods import RMSFromArray, UnpackRawInFloat32
+from audiochains.writers import WriterInWAV
+from audiochains.streams import IOStream, InputStream, StreamFromFile
+from audiochains.chains import ChainOfMethods
+from audiochains.block_methods import RMSFromArray, UnpackRawInFloat32
 
 
 @pytest.mark.parametrize("test_input, expected", [
@@ -43,8 +43,8 @@ def test_io_stream_init_from_json():
                    stream.channels,
                    stream.dtype
                ) == (
-                   float(test_config['framerate']),
-                   test_config['chunk_size'],
+                   float(test_config['samplerate']),
+                   test_config['blocksize'],
                    (test_config['channels'], test_config['channels']),
                    ('int16', 'int16')
                )
@@ -60,8 +60,8 @@ def test_input_stream_init_from_json():
                    stream.channels,
                    stream.dtype
                ) == (
-                   float(test_config['framerate']),
-                   test_config['chunk_size'],
+                   float(test_config['samplerate']),
+                   test_config['blocksize'],
                    test_config['channels'],
                    'int16',
                )

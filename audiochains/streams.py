@@ -42,9 +42,6 @@ class StreamWithChain(ABC):
         with open(json_file, 'r') as json_file:
             stream_config = json.load(json_file)
             validate(instance=stream_config, schema=schema)
-            stream_config['samplerate'] = stream_config.pop('framerate')
-            stream_config['blocksize'] = stream_config.pop('chunk_size')
-            stream_config['device'] = stream_config.pop('device_id')
             stream_config['dtype'] = two_sided_sampwidth[stream_config['sampwidth']]
             stream_config.pop('sampwidth')
 
