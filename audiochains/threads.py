@@ -31,5 +31,8 @@ class AudioInThread(Thread):
     def stop(self):
         self._stop_event.set()
 
+    def play(self):
+        self._stop_event.clear()
+
     def is_stopped(self):
         return self._stop_event.is_set()
