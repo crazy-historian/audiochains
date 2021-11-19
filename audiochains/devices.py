@@ -17,7 +17,8 @@ class AudioDevices:
         devices = sd.query_devices()
         input_devices = list()
         for num, dev in enumerate(devices):
-            if dev['max_input_channels'] != 0:
+            if dev['max_input_channels'] != 0 and\
+                    ('микрофон' in dev['name'].lower() or 'microphone' in dev['name'].lower()):
                 input_devices.append(num)
         return input_devices
 
@@ -70,7 +71,8 @@ class AudioDevices:
         """
         for num, device in enumerate(sd.query_devices()):
             if device_name == device['name']:
-                return sd.query_hostapis(index=num)['name']
+                # return sd.query_hostapis(index=num)['name']
+                return sd.query_hostapis(index=device['hostapi'])['name']
         return None
 
     @staticmethod
@@ -83,4 +85,16 @@ class AudioDevices:
         for num, device in enumerate(sd.query_devices()):
             if device_name == device['name']:
                 return num
+        return None
+
+    @staticmethod
+    def get_device_name_by_index(device_index: int) -> Optional[str]:
+        """
+        If the device with the passed index exists,
+        function returns the devices name related with particular device index,
+        otherwise None
+        """
+        for num, device in enumerate(sd.query_devices()):
+            if device_index == num:
+                return device['name']
         return None

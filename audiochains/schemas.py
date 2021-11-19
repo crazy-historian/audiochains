@@ -4,11 +4,11 @@
 stream_parameters_schema = {
     "type": "object",
     'properties': {
-        "framerate": {
+        "samplerate": {
             "type": ["integer", "null"],
             "enum": [8000, 16000, 22000, 22050, 44100, 44800]
         },
-        'chunk_size': {
+        'blocksize': {
             "type": ["integer", "null"]
         },
         'channels': {
@@ -19,7 +19,7 @@ stream_parameters_schema = {
             "type": ["integer", "null"],
             "enum": [1, 2, 3, 4]
         },
-        'device_id': {
+        'device': {
             "anyOf": [
                 {
                     "type": "integer"
@@ -64,6 +64,6 @@ stream_parameters_schema = {
             "type": ["boolean", "null"]
         },
     },
-    "required": ["framerate", "chunk_size", "channels"],
+    "required": ["samplerate", "blocksize", "channels"],
     "additionalProperties": False
 }

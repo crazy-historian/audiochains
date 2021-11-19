@@ -1,4 +1,5 @@
 import numpy as np
+
 from audioop import rms
 from math import log10
 from scipy.signal import butter, filtfilt
@@ -6,7 +7,7 @@ from abc import ABC, abstractmethod
 from librosa.feature import mfcc
 from typing import Union, List
 
-from output_types import (
+from audiochains.output_types import (
     FourierTuple,
     VoiceRange,
     np_int16_array,
@@ -18,6 +19,7 @@ class BlockAudioMethod(ABC):
     """
     An abstract interface defining the functionality of audio processing unit.
     """
+
     @abstractmethod
     def __call__(self, in_data):
         """
@@ -34,6 +36,7 @@ class UnpackRawInInt16(BlockAudioMethod):
     """
     Unpacking raw audio data (sequences of bytes) in numpy int16 array.
     """
+
     def __call__(self, in_data: bytes) -> np_int16_array:
         return np.frombuffer(in_data, np.int16)
 
@@ -42,6 +45,7 @@ class UnpackRawInFloat32(BlockAudioMethod):
     """
     Unpacking raw audio data (sequences of bytes) in the numpy float32 array.
     """
+
     def __call__(self, in_data: bytes) -> np_float32_array:
         max_int16_value = 2 ** 15
         data = np.frombuffer(in_data, np.int16)
@@ -52,6 +56,7 @@ class RMSFromBytes(BlockAudioMethod):
     """
     Calculating root mean square (RMS) value of the input raw audio block with a certain sample width.
     """
+
     def __init__(self, width: int = 2):
         self.width = width
 
@@ -63,6 +68,7 @@ class RMSFromArray(BlockAudioMethod):
     """
     Calculating root mean square (RMS) value of the input numpy array.
     """
+
     def __call__(self, in_data: Union[np_int16_array, np_float32_array]) -> int:
         in_data = in_data.astype(np.float32)
         return round(np.sqrt((in_data * in_data).sum() / len(in_data)))
@@ -72,6 +78,7 @@ class DBLog10(BlockAudioMethod):
     """
     Calculating logarithmic relative value of input int vale
     """
+
     def __call__(self, in_data: int):
         if in_data > 0:
             return round(20 * log10(in_data), 2)
@@ -83,6 +90,7 @@ class HammingWindow(BlockAudioMethod):
     """
     Superimposing the hamming window on the input numpy array.
     """
+
     def __call__(self, data: Union[np_int16_array, np_float32_array]) -> np_float32_array:
         return data * np.hamming(len(data))
 
@@ -91,6 +99,7 @@ class FourierTransform(BlockAudioMethod):
     """
     Calculating the fourier transform on the input numpy float32 array with a certain framerate.
     """
+
     def __init__(self, framerate: int):
         self.framerate = framerate
 
@@ -106,6 +115,7 @@ class MFCC(BlockAudioMethod):
     """
     Calculating certain number of mfcc coefficients of the input numpy float32 array
     """
+
     def __init__(self, n_mfcc: int, freq_rate: int):
         super().__init__()
         self.n_mfcc = n_mfcc
@@ -119,6 +129,7 @@ class BandPassFilter(BlockAudioMethod):
     """
     Application of the butterworth bandpass filter
     """
+
     def __init__(self,
                  sample_rate: int,
                  low_cut: int = 200,
@@ -139,22 +150,21 @@ class SoundPressureThreshold(BlockAudioMethod):
     """
     Calculation of the threshold function to the RMS value of the input audio amplitude
     """
-    def __init__(self,
-                 silence_diapason: List[int],
-                 whisper_diapason: List[int],
-                 normal_diapason: List[int],
-                 loud_diapason: List[int]):
-        self.silence_diapason = silence_diapason
-        self.whisper_diapason = whisper_diapason
-        self.normal_diapason = normal_diapason
-        self.loud_diapason = loud_diapason
 
-    def __call__(self, in_data: Union[int, np.float32]) -> VoiceRange:
-        if in_data <= self.silence_diapason[1]:
+    def __init__(self,
+                 silence_value: float,
+                 whisper_value: float,
+                 normal_value: float):
+        self.silence_value = silence_value
+        self.whisper_value = whisper_value
+        self.normal_value = normal_value
+
+    def __call__(self, in_data: Union[int, float, np.float32]) -> VoiceRange:
+        if in_data <= self.silence_value:
             return VoiceRange.SILENCE
-        elif self.whisper_diapason[0] <= in_data <= self.whisper_diapason[1]:
+        elif in_data <= self.whisper_value:
             return VoiceRange.WHISPER
-        elif self.normal_diapason[0] <= in_data <= self.normal_diapason[1]:
+        elif in_data <= self.normal_value:
             return VoiceRange.NORMAL
-        elif self.loud_diapason[0] <= in_data:
+        elif in_data > self.normal_value:
             return VoiceRange.LOUD

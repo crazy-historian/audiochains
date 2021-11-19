@@ -1,0 +1,7 @@
+{
+  "samplerate": 44800,
+  "blocksize": 1024,
+  "channels": 1,
+  "sampwidth": 2,
+  "device": null
+}
