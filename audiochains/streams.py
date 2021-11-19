@@ -85,9 +85,12 @@ class IOStream(StreamWithChain, sd.RawStream):
             with open("test_config.json", "w") as write_file:
                 json.dump(test_config, write_file)
 
-            with IOStreamWithChain(json_file='test_config.json') as stream:
-                while True:
-                    stream.write(stream.read(stream.blocksize)[0])
+            with InputOutputStream(json_file='test_config.json') as stream:
+                stream.set_methods(
+                    RMSFromBytes()
+                )
+                for _ in range(stream.get_iterations(seconds=10)):
+                    print("#" * stream.apply())
 
         Parameters
         ----------
@@ -141,9 +144,12 @@ class InputStream(StreamWithChain, sd.RawInputStream):
             with open("test_config.json", "w") as write_file:
                 json.dump(test_config, write_file)
 
-            with InputStreamWithChain(json_file='test_config.json') as stream:
-                while True:
-                    stream.write(stream.read(stream.blocksize)[0])
+            with InputStream(json_file='test_config.json') as stream:
+                stream.set_methods(
+                    RMSFromBytes()
+                )
+                for _ in range(stream.get_iterations(seconds=10)):
+                    print("#" * stream.apply())
 
         Parameters
         ----------

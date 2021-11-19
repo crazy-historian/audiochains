@@ -18,7 +18,7 @@ setup(
     author='Maxim Zaitsev',
     author_email='zaitsev808@mail.ru',
 
-    packages=['audiochains', 'audiochains/test',],
+    packages=['audiochains', 'audiochains/test'],
     package_data={'audiochains/test': ['test_recording.wav', 'test_playback.wav', 'test_config.json']},
     include_package_data=True,
     install_requires=[

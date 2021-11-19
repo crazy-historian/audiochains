@@ -6,7 +6,7 @@ A library including sounddevice audio streams with the ability to process raw da
 pip install audiochains
 ```
 
-## Example of using
+## Usage example
 
 For instance, it is needed to get an RMS of input audio signal amplitude value.
 
@@ -23,5 +23,5 @@ with InputStream(
         RMSFromBytes()
     )
     for _ in range(stream.get_iterations(seconds=10)):
-        stream.read(stream.blocksize)
+        print("#" * stream.apply())
 ```
