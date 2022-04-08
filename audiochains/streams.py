@@ -134,8 +134,7 @@ class IOStream(StreamWithChain, sd.RawStream):
 
 
 class InputStream(StreamWithChain, sd.RawInputStream):
-    def __init__(self, json_file: str = None, sampwidth=2, chain_of_methods: ChainOfMethods = None, *args,
-                 **kwargs):
+    def __init__(self, json_file: str = None, sampwidth=2, chain_of_methods: ChainOfMethods = None, *args, **kwargs):
         """
          This class can be initialized by passing the json file name with necessary parameters.
 
