@@ -24,9 +24,9 @@ with InputStream(
 	channels=1,
 	sampwidth=2
 ) as stream:
-		stream.set_methods(RMSFromBytes(width=2))
-		for _ in range(stream.get_iterations(seconds=10)):
-				print("#" * stream.apply())
+	stream.set_methods(RMSFromBytes(width=2))
+	for _ in range(stream.get_iterations(seconds=10)):
+			print("#" * stream.apply())
 ```
 
 This code opens an audio stream for recording 10 seconds and each constant moment of time it calculates RMS of the given data chunk and prints its.

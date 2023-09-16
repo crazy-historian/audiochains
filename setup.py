@@ -10,7 +10,7 @@ with open(README, encoding='utf-8') as f:
 setup(
     name='audiochains',
     description='runtime audio processing in chains of algorithms',
-    version='0.1.2',
+    version='0.1.3',
     license='',
     long_description=long_description,
     long_desctiption_content_type='text/markdown',
@@ -22,7 +22,7 @@ setup(
     package_data={'audiochains/test': ['test_recording.wav', 'test_playback.wav', 'test_config.json']},
     include_package_data=True,
     install_requires=[
-        "numpy==1.20.0",
+        "numpy",
         "scipy>=1.7.1",
         "librosa>=0.8.1",
         "sounddevice>=0.4.2",
