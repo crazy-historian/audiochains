@@ -5,7 +5,8 @@ from audioop import rms
 from math import log10
 from scipy.signal import butter, filtfilt
 from abc import ABC, abstractmethod
-from librosa.feature import mfcc, zero_crossing_rate, yin
+from librosa.feature import mfcc, zero_crossing_rate
+from librosa import yin
 
 from typing import Union, List
 
