@@ -22,7 +22,7 @@ setup(
     package_data={'audiochains/test': ['test_recording.wav', 'test_playback.wav', 'test_config.json']},
     include_package_data=True,
     install_requires=[
-        "numpy==1.20.0",
+        "numpy",
         "scipy>=1.7.1",
         "librosa>=0.8.1",
         "sounddevice>=0.4.2",
