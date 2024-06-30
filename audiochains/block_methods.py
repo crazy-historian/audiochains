@@ -1,10 +1,12 @@
 import numpy as np
+import parselmouth
 
 from audioop import rms
 from math import log10
 from scipy.signal import butter, filtfilt
 from abc import ABC, abstractmethod
-from librosa.feature import mfcc
+from librosa.feature import mfcc, zero_crossing_rate, yin
+
 from typing import Union, List
 
 from audiochains.output_types import (
@@ -168,3 +170,80 @@ class SoundPressureThreshold(BlockAudioMethod):
             return VoiceRange.NORMAL
         elif in_data > self.normal_value:
             return VoiceRange.LOUD
+        
+class ZeroCrossingRate(BlockAudioMethod):
+    def __init__(
+            self,
+            frame_rate: int = 16000,
+            frame_length: int = 1024,
+            win_length: int = 512,
+        ) -> None:
+        super().__init__()
+        self.frame_length = frame_length
+        self.win_length = win_length
+        self.frame_rate = frame_rate
+
+    def __call__(self, in_data: np_float32_array) -> np_float32_array:
+        avg_zcr = np.mean(zero_crossing_rate(
+            y=in_data,
+            frame_length=self.frame_length,
+            hop_length=self.win_length,
+            ))
+        
+        avg_zcr *= self.frame_length
+        frame_duration = self.frame_length / self.frame_rate
+        
+        return avg_zcr / frame_duration
+
+    
+class YIN(BlockAudioMethod):
+    def __init__(
+            self,
+            frame_rate: int = 16000,
+            f_min: int = 50,
+            f_max: int = 500
+            ) -> None:
+        super().__init__()
+        self.frame_rate = frame_rate
+        self.f_min = f_min
+        self.f_max = f_max
+
+
+    def __call__(self, in_data: np_float32_array) -> np_float32_array:
+        return np.mean(
+            yin(
+                in_data,
+                fmin=self.f_min,
+                fmax=self.f_max,
+                sr=self.frame_rate
+            )
+        )
+    
+class PraatPitch(BlockAudioMethod):
+    def __init__(self,
+            frame_rate: int = 16000,
+            f_min: int = 50,
+            f_max: int = 500
+        ) -> None:
+        super().__init__()
+        self.frame_rate = frame_rate
+        self.f_min = f_min
+        self.f_max = f_max
+
+    def __call__(self, in_data: np_float32_array) -> np_float32_array:
+        in_data = parselmouth.Sound(in_data, self.frame_rate)
+        pitch = in_data.to_pitch(
+            time_step=None,
+            pitch_floor=self.f_min,
+            pitch_ceiling=self.f_max,
+        )
+
+        pitch_values = pitch.selected_array['frequency']
+        valid_pitch_values = pitch_values[pitch_values > 0]
+    
+        if len(valid_pitch_values) > 0:
+            mean_pitch = np.mean(valid_pitch_values)
+        else:
+            mean_pitch = 0
+        
+        return mean_pitch
