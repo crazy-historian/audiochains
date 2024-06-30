@@ -172,6 +172,10 @@ class SoundPressureThreshold(BlockAudioMethod):
             return VoiceRange.LOUD
         
 class ZeroCrossingRate(BlockAudioMethod):
+    """
+    Calculation of the rate at which a signal changes
+    from positive to zero to negative or from negative to zero to positive
+    """
     def __init__(
             self,
             frame_rate: int = 16000,
@@ -197,6 +201,10 @@ class ZeroCrossingRate(BlockAudioMethod):
 
     
 class YIN(BlockAudioMethod):
+    """
+    YIN, a fundamental frequency estimator for speech and music
+    http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
+    """
     def __init__(
             self,
             frame_rate: int = 16000,
@@ -220,6 +228,9 @@ class YIN(BlockAudioMethod):
         )
     
 class PraatPitch(BlockAudioMethod):
+    """
+    Performs an access to Pratt commands for Pitch calculatiion
+    """
     def __init__(self,
             frame_rate: int = 16000,
             f_min: int = 50,

@@ -10,7 +10,7 @@ with open(README, encoding='utf-8') as f:
 setup(
     name='audiochains',
     description='runtime audio processing in chains of algorithms',
-    version='0.1.2',
+    version='0.1.3',
     license='',
     long_description=long_description,
     long_desctiption_content_type='text/markdown',
@@ -28,7 +28,8 @@ setup(
         "sounddevice>=0.4.2",
         "jsonschema>=4.1.0",
         "matplotlib>=3.4.3",
-        "pytest~=6.2.5"
+        "pytest~=6.2.5",
+        "praat-parselmouth"
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest']
